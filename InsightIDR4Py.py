@@ -1,4 +1,4 @@
-# Rapid7-InsightIDR4Py.py
+# InsightIDR4Py.py
 # Author: Micah Babinski
 # Date: 10/1/2021
 # Description: Contains useful functions for working with the Rapid7 InsightIDR REST API
@@ -46,7 +46,7 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
 
     Required Arguments:
         logset_name (str): The logset to query. Available logsets can be listed using ListLogSetNames.
-        query (str): The query, including the where() clause, that will return matching events. Groupby(), calculate(), and other functions are not currently supported.
+        query (str): The query, including the where() clause, that will return matching events. To retrieve groups, use the QueryGroups() function.
 
     Optional Arguments:
         time_range (str): A relative time range to search for. "Last 20 Minutes" is the default. Set this to None if using from_time and to_time.
@@ -101,7 +101,7 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
             else:
                 run = False
         else:
-            print(r.status_code)
+            raise ValueError("Query failed with an unexpected status code. Status code returned was: " + str(r.status_code))
             return
         cntr += 1
         if cntr % 30 == 0:
@@ -111,3 +111,83 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
     events = [json.loads(event["message"]) for event in events]
 
     return events
+
+
+def QueryGroups(logset_name, query, time_range="Last 20 Minutes", from_time=None, to_time=None):
+    """
+    Queries a logset in InsightIDR, returning a dictionary with group keys, and the corresponding value being the count for that group.
+
+    Required Arguments:
+        logset_name (str): The logset to query. Available logsets can be listed using ListLogSetNames.
+        query (str): The query, including the where() clause, that will return matching events. To retrieve groups, use the QueryGroups() function.
+
+    Optional Arguments:
+        time_range (str): A relative time range to search for. "Last 20 Minutes" is the default. Set this to None if using from_time and to_time.
+        from_time (str): The beginning time to search for in mm/dd/yyyy H:M:S format. The default is None.
+        from_time (str): The end time to search for in mm/dd/yyyy H:M:S format. The default is None.
+
+    Returns:
+        group (dict): A dictionary with the group values as 
+    """
+    # validate input query
+    if not "groupby(" in query.lower():
+        raise ValueError("Query must contain the groupby() clause!")
+    
+    # convert from/to times as necessary (string to timestamp with milliseconds)
+    if not time_range:
+        from_time = int(datetime.strptime(from_time, "%m/%d/%Y %H:%M:%S").timestamp()) * 1000
+        to_time = int(datetime.strptime(to_time, "%m/%d/%Y %H:%M:%S").timestamp()) * 1000
+
+    # get the relevant Log IDs
+    log_ids = ListLogIdsByLogSetName(api_key, logset_name)
+
+    # get the time range
+    if time_range:
+        during = {"time_range": time_range}
+    else:
+        during = {"from": from_time, "to": to_time}
+    body = {"logs": log_ids,
+            "leql": {"during": during,
+                     "statement": query}}
+
+    # build the first full URL
+    url = logs_url
+
+    # retrieve the data
+    run = True
+    results = []
+    cntr = 1
+    r = requests.post(url, json=body, headers=headers)
+    print("Gathering event groups matching query: {}.".format(query))
+    while run:
+        if r.status_code == 202:
+            cont = True
+            while cont:
+                #print("Received 'continue' response, polling again.")
+                continue_url = r.json()["links"][0]["href"]
+                r = requests.get(continue_url, headers=headers)
+                if r.status_code != 202:
+                    cont = False
+                    break
+        elif r.status_code == 200:
+            if "links" in r.json():
+                #print("Partial response received. Querying for more data.")
+                continue_url = r.json()["links"][0]["href"]
+                r = requests.get(continue_url, headers=headers)
+            else:
+                results.extend(r.json()["statistics"]["groups"])
+                run = False
+        else:
+            raise ValueError("Query failed with an unexpected status code. Status code returned was: " + str(r.status_code))
+            return
+        cntr += 1
+        if cntr % 30 == 0:
+            print("-Gathered {} groups.".format(str(len(results))))
+
+    groups = {}
+    for result in results:
+        key = list(result.keys())[0]
+        value = int(result[key]["count"])
+        groups[key] = value
+
+    return groups
