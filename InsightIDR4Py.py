@@ -13,7 +13,7 @@ logs_url = "https://{}.rest.logs.insight.rapid7.com/query/logs/".format(region)
 query_url = "https://{}.rest.logs.insight.rapid7.com/query/".format(region)
 log_mgmt_url = "https://{}.api.insight.rapid7.com/log_search/management/logs".format(region)
 
-# define API key and headers (remember to store your API keys securely!
+# define API key and headers (remember to store your API keys securely!)
 api_key = "API_Key_Here"
 headers = {"x-api-key": api_key}
 
