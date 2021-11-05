@@ -5,6 +5,14 @@ InsightIDR4Py allows analysts to query log data from Rapid7 [InsightIDR](https:/
 
 Happy analyzing!:monocle_face:
 
+# Prerequisites
+You will need obtain an API key from the InsightIDR system. The documentation for this can be found [here](https://docs.rapid7.com/insight/managing-platform-api-keys/). From there, you'll need to pass this value to the API key variable shown below:
+```python
+# define API key and headers (remember to store your API keys securely!)
+api_key = "API_Key_Here"
+```
+There are several ways to do this, and you should make sure that the way you choose aligns with your organization's security policy. Python's [keyring](https://pypi.org/project/keyring/) library is one possibility.
+
 # Examples
 ## Example 1: Query DNS Logs for Suspicious TLDs
 ```python
