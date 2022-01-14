@@ -61,9 +61,41 @@ Result:
 ('Super.Hans', 24)
 ```
 
-## Example 3: Query VPN Logins from a Certain IP Range
+## Example 3: Query VPN Logins from a Certain IP Range and Check the Results Using [AbuseIPDB](https://www.abuseipdb.com/)
+This example uses [python-abuseipdb](https://github.com/meatyite/python-abuseipdb), a Python object oriented wrapper for AbuseIPDB v2 API. 
+
+It requires an API key, which you can get by creating a free account. From there, go to User Account > API, choose Create Key, and enter this string into the abuse_ip_db_api_key variable in the example below.
+
+The same API key security principles mentioned above apply here. Guard your API keys to prevent rogue usage!
+
 ```python
-# to do
+import InsightIDR4Py as idr
+import abuseipdb import *
+
+# define the AbuseIPDB API key
+abuse_ip_db_api_key = "YOUR_KEY_HERE"
+
+# define the query parameters
+logset_name = "Ingress Authentication"
+query = "where(service = vpn AND source_ip = IP(64.62.128.0/17))"
+time_range = "Last 24 Hours"
+
+# query the logs
+events = idr.QueryEvents(logset_name, query, time_range)
+
+# print out an event
+if len(events) > 0:
+    ipdb = AbuseIPDB(abuse_ip_db_api_key)
+	for event in events:
+	    check = ipdb.check(event["source_ip"])
+		print("----------")
+		print("IP Address: " + ip_check.ipAddress)
+		print("Last reported at: " + ip_check.lastReportedAt)
+		print("Abuse confidence score: " + str(ip_check.abuseConfidenceScore))
+		print("Abuser country: " + ip_check.countryName)
+		print("Abuser ISP: " + ip_check.isp)
+		print("Total reports of abuser: " + str(ip_check.totalReports))
+		print("----------")
 ```
 
 # License

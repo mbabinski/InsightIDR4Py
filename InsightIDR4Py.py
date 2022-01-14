@@ -13,28 +13,28 @@ logs_url = "https://{}.rest.logs.insight.rapid7.com/query/logs/".format(region)
 query_url = "https://{}.rest.logs.insight.rapid7.com/query/".format(region)
 log_mgmt_url = "https://{}.api.insight.rapid7.com/log_search/management/logs".format(region)
 
-# define API key and headers (remember to store your API keys securely!)
+# define API key and headers (remember to store your API keys securely!
 api_key = "API_Key_Here"
 headers = {"x-api-key": api_key}
 
-def GetLogInfo(api_key):
+def GetLogInfo():
     """Returns metadata about the available log sources."""
     response = requests.get(log_mgmt_url, headers=headers).json()["logs"]
     
     return response
 
 
-def ListLogSetNames(api_key):
+def ListLogSetNames():
     """Returns a list of logset names as they appear in the InsightIDR console."""
-    log_info = GetLogInfo(api_key)
+    log_info = GetLogInfo()
     logset_names = list(set([log["logsets_info"][0]["name"] for log in log_info]))
 
     return sorted(logset_names)
 
 
-def ListLogIdsByLogSetName(api_key, logset_name):
+def ListLogIdsByLogSetName(logset_name):
     """Returns a list of log ID values for a given logset name."""
-    log_info = GetLogInfo(api_key)
+    log_info = GetLogInfo()
     log_ids = [log["id"] for log in log_info if log["logsets_info"][0]["name"].upper() == logset_name.upper()]
 
     return log_ids
@@ -62,7 +62,7 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
         to_time = int(datetime.strptime(to_time, "%m/%d/%Y %H:%M:%S").timestamp()) * 1000
 
     # get the relevant Log IDs
-    log_ids = ListLogIdsByLogSetName(api_key, logset_name)
+    log_ids = ListLogIdsByLogSetName(logset_name)
 
     # get the time range
     if time_range:
@@ -139,7 +139,7 @@ def QueryGroups(logset_name, query, time_range="Last 20 Minutes", from_time=None
         to_time = int(datetime.strptime(to_time, "%m/%d/%Y %H:%M:%S").timestamp()) * 1000
 
     # get the relevant Log IDs
-    log_ids = ListLogIdsByLogSetName(api_key, logset_name)
+    log_ids = ListLogIdsByLogSetName(logset_name)
 
     # get the time range
     if time_range:
