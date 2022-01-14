@@ -86,16 +86,16 @@ events = idr.QueryEvents(logset_name, query, time_range)
 # print out an event
 if len(events) > 0:
     ipdb = AbuseIPDB(abuse_ip_db_api_key)
-	for event in events:
-	    check = ipdb.check(event["source_ip"])
-	    print("----------")
-	    print("IP Address: " + ip_check.ipAddress)
-	    print("Last reported at: " + ip_check.lastReportedAt)
-	    print("Abuse confidence score: " + str(ip_check.abuseConfidenceScore))
-	    print("Abuser country: " + ip_check.countryName)
-	    print("Abuser ISP: " + ip_check.isp)
-	    print("Total reports of abuser: " + str(ip_check.totalReports))
-	    print("----------")
+    for event in events:
+	check = ipdb.check(event["source_ip"])
+	print("----------")
+	print("IP Address: " + ip_check.ipAddress)
+	print("Last reported at: " + ip_check.lastReportedAt)
+	print("Abuse confidence score: " + str(ip_check.abuseConfidenceScore))
+	print("Abuser country: " + ip_check.countryName)
+	print("Abuser ISP: " + ip_check.isp)
+	print("Total reports of abuser: " + str(ip_check.totalReports))
+	print("----------")
 ```
 
 # License
