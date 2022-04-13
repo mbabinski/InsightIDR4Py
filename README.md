@@ -83,7 +83,7 @@ time_range = "Last 24 Hours"
 # query the logs
 events = idr.QueryEvents(logset_name, query, time_range)
 
-# print out an event
+# check the source IP addresses in AbuseIPDB and display results
 if len(events) > 0:
     ipdb = AbuseIPDB(abuse_ip_db_api_key)
     for event in events:

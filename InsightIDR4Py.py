@@ -40,22 +40,7 @@ def ListLogIdsByLogSetName(logset_name):
     return log_ids
 
 
-def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None, to_time=None):
-    """
-    Queries a logset in InsightIDR, returning a list of dictionary objects representing events from the logset.
-
-    Required Arguments:
-        logset_name (str): The logset to query. Available logsets can be listed using ListLogSetNames.
-        query (str): The query, including the where() clause, that will return matching events. To retrieve groups, use the QueryGroups() function.
-
-    Optional Arguments:
-        time_range (str): A relative time range to search for. "Last 20 Minutes" is the default. Set this to None if using from_time and to_time.
-        from_time (str): The beginning time to search for in mm/dd/yyyy H:M:S format. The default is None.
-        from_time (str): The end time to search for in mm/dd/yyyy H:M:S format. The default is None.
-
-    Returns:
-        events (list): A time-ordered list of dictionaries, with each dictionary containing the key/value pairs from a given event log entry.
-    """
+def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None, to_time=None, suppress_msgs=True):
     # convert from/to times as necessary (string to timestamp with milliseconds)
     if not time_range:
         from_time = int(datetime.strptime(from_time, "%m/%d/%Y %H:%M:%S").timestamp()) * 1000
@@ -63,7 +48,6 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
 
     # get the relevant Log IDs
     log_ids = ListLogIdsByLogSetName(logset_name)
-
     # get the time range
     if time_range:
         during = {"time_range": time_range}
@@ -81,7 +65,7 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
     events = []
     cntr = 1
     r = requests.post(url, json=body, headers=headers)
-    print("Gathering events matching: {}.".format(query))
+    #print("Gathering events matching: {}.".format(query))
     while run:
         if r.status_code == 202:
             cont = True
@@ -92,7 +76,7 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
                 if r.status_code != 202:
                     cont = False
                     break
-        elif (r.status_code == 200):
+        elif r.status_code == 200:
             events.extend(r.json()["events"])
             if "links" in r.json():
                 #print("Partial response received. Querying for more data.")
@@ -101,11 +85,12 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
             else:
                 run = False
         else:
-            raise ValueError("Query failed with an unexpected status code. Status code returned was: " + str(r.status_code))
+            raise ValueError("Query failed without a normal status code. Status code returned was: " + str(r.status_code))
             return
         cntr += 1
-        if cntr % 30 == 0:
-            print("-Gathered {} events.".format(str(len(events))))
+        if not suppress_msgs:
+            if cntr % 30 == 0:
+                print("-Gathered {} events.".format(str(len(events))))
 
     # filter the event objects to get just the dictionary representation of the event data
     events = [json.loads(event["message"]) for event in events]
@@ -113,22 +98,7 @@ def QueryEvents(logset_name, query, time_range="Last 20 Minutes", from_time=None
     return events
 
 
-def QueryGroups(logset_name, query, time_range="Last 20 Minutes", from_time=None, to_time=None):
-    """
-    Queries a logset in InsightIDR, returning a dictionary with group keys, and the corresponding value being the count for that group.
-
-    Required Arguments:
-        logset_name (str): The logset to query. Available logsets can be listed using ListLogSetNames.
-        query (str): The query, including the where() clause, that will return matching events. To retrieve groups, use the QueryGroups() function.
-
-    Optional Arguments:
-        time_range (str): A relative time range to search for. "Last 20 Minutes" is the default. Set this to None if using from_time and to_time.
-        from_time (str): The beginning time to search for in mm/dd/yyyy H:M:S format. The default is None.
-        from_time (str): The end time to search for in mm/dd/yyyy H:M:S format. The default is None.
-
-    Returns:
-        group (dict): A dictionary with the group values as 
-    """
+def QueryGroups(logset_name, query, time_range="Last 20 Minutes", from_time=None, to_time=None, suppress_msgs=True):
     # validate input query
     if not "groupby(" in query.lower():
         raise ValueError("Query must contain the groupby() clause!")
@@ -158,7 +128,7 @@ def QueryGroups(logset_name, query, time_range="Last 20 Minutes", from_time=None
     results = []
     cntr = 1
     r = requests.post(url, json=body, headers=headers)
-    print("Gathering event groups matching query: {}.".format(query))
+    #print("Gathering event groups matching query: {}.".format(query))
     while run:
         if r.status_code == 202:
             cont = True
@@ -178,11 +148,12 @@ def QueryGroups(logset_name, query, time_range="Last 20 Minutes", from_time=None
                 results.extend(r.json()["statistics"]["groups"])
                 run = False
         else:
-            raise ValueError("Query failed with an unexpected status code. Status code returned was: " + str(r.status_code))
+            raise ValueError("Query failed without a normal status code. Status code returned was: " + str(r.status_code))
             return
         cntr += 1
-        if cntr % 30 == 0:
-            print("-Gathered {} groups.".format(str(len(results))))
+        if not suppress_msgs:
+            if cntr % 30 == 0:
+                print("-Gathered {} groups.".format(str(len(results))))
 
     groups = {}
     for result in results:
