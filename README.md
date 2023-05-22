@@ -1,22 +1,58 @@
 # InsightIDR4Py
-Allows simplified Python interaction with Rapid7's InsightIDR REST API.
+A Python client allowing simplified interaction with Rapid7's InsightIDR REST API.
 
 InsightIDR4Py allows analysts to query log data from Rapid7 [InsightIDR](https://docs.rapid7.com/insightidr/), analyze it within Python, and/or feed it to other APIs like VirusTotal, AbuseIPDB, or others. This tool handles some of the challenges and complexities of using the InsightIDR REST API, including polling queries in progress, paginated responses, handling the JSON output, and time range queries.
 
+InsightIDR4Py also offers access to some of the additional APIs in the InsightIDR ecosystem. These include:
+## Investigations
+* List Investigations
+* Get an Investigation
+* Create Investigation
+* Close Investigations in Bulk
+* List Alerts by Investigation
+* List Rapid7 Product Alerts by Investigation
+* Update Investigation
+## Threats
+* Create Threat
+* Add Indicators to Threat
+* Replace Threat Indicators
+* Delete Threat
+## Saved Queries
+* List Saved Queries
+* Get a Saved Query
+* Create Saved Query
+* Replace a Saved Query
+* Update a Saved Query
+* Delete a Saved Query
+
 Happy analyzing!:monocle_face:
 
-# Prerequisites
-You will need obtain an API key from the InsightIDR system. The documentation for this can be found [here](https://docs.rapid7.com/insight/managing-platform-api-keys/). From there, you'll need to pass this value to the API key variable shown below:
-```python
-# define API key and headers (remember to store your API keys securely!)
-api_key = "API_Key_Here"
+# Installation
+InsightIDR4Py is available on [PyPI](https://pypi.org/project/InsightIDR4Py/) and can be installed using:
 ```
-There are several ways to do this, and you should make sure that the way you choose aligns with your organization's security policy. Python's [keyring](https://pypi.org/project/keyring/) library is one possibility.
+pip install InsightIDR4Py
+```
+
+# Prerequisites
+You will need obtain an API key from the InsightIDR system. The documentation for this can be found [here](https://docs.rapid7.com/insight/managing-platform-api-keys/). From there, you'll use this API key value to create the InsightIDR API object as shown below:
+```python
+import InsightIDR4Py as idr
+
+# define API key (store this value securely)
+api_key = "API_Key_Here"
+
+# create the InsightIDR object
+api = idr.InsightIDR(api_key)
+```
+Remember to store the API key securely! There are several ways to do this, and you should make sure that the way you choose aligns with your organization's security policy. Python's [keyring](https://pypi.org/project/keyring/) library is one possibility.
 
 # Examples
 ## Example 1: Query DNS Logs for Suspicious TLDs
 ```python
 import InsightIDR4Py as idr
+
+# create the InsightIDR object
+api = idr.InsightIDR(api_key)
 
 # define the query parameters
 logset_name = "DNS Query"
@@ -24,11 +60,10 @@ query = "where(public_suffix IN [buzz, top, club, work, surf, tw, gq, ml, cf, bi
 time_range = "Last 36 Hours"
 
 # query the logs
-events = idr.QueryEvents(logset_name, query, time_range)
+events = api.QueryEvents(logset_name, query, time_range)
 
 # print out an event
 print(event[0])
-
 ```
 Result:
 ```python
@@ -39,18 +74,20 @@ Result:
 ```python
 import InsightIDR4Py as idr
 
+# create the InsightIDR object
+api = idr.InsightIDR(api_key)
+
 # define the query parameters
 logset_name = "Asset Authentication"
 query = "where(source_json.eventCode = 4625) groupby(destination_account) limit(5)"
 time_range = "Last 24 Hours"
 
 # query the logs
-groups = idr.QueryGroups(logset_name, query, time_range)
+groups = api.QueryGroups(logset_name, query, time_range)
 
 # print out the groups
 for group in groups.items():
     print(group)
-
 ```
 Result:
 ```
@@ -72,6 +109,9 @@ The same API key security principles mentioned above apply here. Guard your API 
 import InsightIDR4Py as idr
 import abuseipdb import *
 
+# create the InsightIDR object
+api = idr.InsightIDR(api_key)
+
 # define the AbuseIPDB API key
 abuse_ip_db_api_key = "YOUR_KEY_HERE"
 
@@ -81,7 +121,7 @@ query = "where(service = vpn AND source_ip = IP(64.62.128.0/17))"
 time_range = "Last 24 Hours"
 
 # query the logs
-events = idr.QueryEvents(logset_name, query, time_range)
+events = api.QueryEvents(logset_name, query, time_range)
 
 # check the source IP addresses in AbuseIPDB and display results
 if len(events) > 0:
@@ -103,4 +143,3 @@ This repository is licensed under an [MIT license](https://github.com/mbabinski/
 
 # Contributing
 You are welcome to contribute however you wish! I appreciate feedback in any format.
-
