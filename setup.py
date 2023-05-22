@@ -12,8 +12,7 @@ setup(
     license="MIT",
     author="Micah Babinski",
     author_email="m.babinski.88@gmail.com",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(),
     url="https://github.com/mbabinski/InsightIDR4Py",
     keywords="Rapid7, InsightIDR, SIEM, Logsearch, Investigations, Threats",
     install_requires=[
