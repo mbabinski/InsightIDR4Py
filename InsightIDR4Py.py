@@ -1,6 +1,22 @@
 import requests, json, time
 from datetime import datetime, timedelta, timezone
 
+def GetDefaultStartTime():
+    """
+    Get default start time for time-based queries.
+    """
+    default_start_time = (datetime.now(timezone.utc) - timedelta(28)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    return default_start_time
+
+def GetDefaultEndTime():
+    """
+    Get default end time (now) for time-based queries.
+    """
+    default_end_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    
+    return default_end_time
+
 class InsightIDR(object):
     def __init__(self, api_key, region=None):
         self.session = requests.Session()
@@ -26,23 +42,6 @@ class InsightIDR(object):
             self.response = self.session.get("https://{}.rest.logs.insight.rapid7.com/management/logs".format(region))
             if self.response.status_code == 200:
                 return region
-
-    def GetDefaultStartTime(self):
-        """
-        Get default start time for time-based queries.
-        """
-        default_start_time = (datetime.now(timezone.utc) - timedelta(28)).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        return default_start_time
-
-    def GetDefaultEndTime(self):
-        """
-        Get default end time (now) for time-based queries.
-        """
-        default_end_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        
-        return default_end_time
-        
       
     def GetLogInfo(self):
         """Returns metadata about the available log sources."""
@@ -189,8 +188,8 @@ class InsightIDR(object):
 
     def ListInvestigations(self,
                            assignee_email=None,
-                           start_time=self.GetDefaultStartTime(),
-                           end_time=self.GetDefaultEndTime(),
+                           start_time=GetDefaultStartTime(),
+                           end_time=GetDefaultEndTime(),
                            multi_customer=False,
                            priorities=["LOW", "MEDIUM", "HIGH", "CRITICAL"],
                            sort="priority,DESC",
@@ -280,8 +279,8 @@ class InsightIDR(object):
 
         return result
 
-    def CloseInvestigationsInBulk(self, source, from_time=self.GetDefaultStartTime(),
-                                  to_time=self.GetDefaultEndTime(), alert_type=None,
+    def CloseInvestigationsInBulk(self, source, from_time=GetDefaultStartTime(),
+                                  to_time=GetDefaultEndTime(), alert_type=None,
                                   disposition=None, detection_rule_rrn=None,
                                   max_investigations_to_close=None):
         """
