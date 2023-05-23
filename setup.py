@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="InsightIDR4Py",
-    version="0.2",
+    version="0.3",
     description="A Python client allowing simplified interaction with Rapid7's InsightIDR REST API.",
     long_description=long_description,
     long_description_content_type="text/markdown",

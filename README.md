@@ -12,6 +12,9 @@ InsightIDR4Py also offers access to some of the additional APIs in the InsightID
 * List Alerts by Investigation
 * List Rapid7 Product Alerts by Investigation
 * Update Investigation
+* List Comments on an Investigation
+* Create Comment
+* Delete Comment
 ## Threats
 * Create Threat
 * Add Indicators to Threat

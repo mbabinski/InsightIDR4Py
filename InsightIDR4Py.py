@@ -29,6 +29,7 @@ class InsightIDR(object):
         self.query_url = "https://{}.rest.logs.insight.rapid7.com/query/".format(self.region)
         self.log_mgmt_url = "https://{}.api.insight.rapid7.com/log_search/management/logs/".format(self.region)
         self.investigations_url = "https://{}.api.insight.rapid7.com/idr/v2/investigations/".format(self.region)
+        self.comments_url = "https://{}.api.insight.rapid7.com/idr/v1/comments/".format(self.region)
         self.threat_url = "https://{}.api.insight.rapid7.com/idr/v1/customthreats/".format(self.region)
 
     def _get_region(self):
@@ -385,6 +386,60 @@ class InsightIDR(object):
         result = response.json()
 
         return result
+
+    def ListCommentsByInvestigation(self, investigation_rrn):
+        """
+        Returns a list of comments filtered by a specific investigation with a given rrn.
+        """
+        comments = []
+        url = self.comments_url
+        params = {
+            "index": 0,
+            "size": 100,
+            "target": investigation_rrn
+        }
+        
+        # make initial request
+        self.session.headers["Accept-version"] = "comments-preview"
+        response = self.session.get(url, params=params)
+        result = response.json()
+        # get the total
+        total = result["metadata"]["total_data"]
+        # add the results to the output list
+        comments.extend(result["data"])
+        # iterate through remaining alerts and add them to the output list
+        while len(comments) < total:
+            params["index"] += 100
+            response = self.session.get(url, params)
+            result = response.json()
+            comments.extend(result["data"])
+
+        return comments
+
+    def CreateComment(self, investigation_rrn, comment_text):
+        """
+        Creates a comment on an investigation.
+        """
+        data = {
+            "attachments": [], # attachments not yet supported
+            "body": comment_text,
+            "target": investigation_rrn
+        }
+        url = self.comments_url
+        self.session.headers["Accept-version"] = "comments-preview"
+        response = self.session.post(url, json=data)
+        result = response.json()
+
+        return result
+
+    def DeleteComment(self, comment_rrn):
+        """
+        Deletes a comment identified by its rrn value.
+        """
+        url = self.comments_url + "{}".format(comment_rrn)
+        response = self.session.delete(url)
+
+        return response
 
     def CreateThreat(self, threat_name, threat_description, indicators={}):
         """
