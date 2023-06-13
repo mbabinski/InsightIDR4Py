@@ -1,9 +1,33 @@
 # InsightIDR4Py
 A Python client allowing simplified interaction with Rapid7's InsightIDR REST API.
 
-InsightIDR4Py allows analysts to query log data from Rapid7 [InsightIDR](https://docs.rapid7.com/insightidr/), analyze it within Python, and/or feed it to other APIs like VirusTotal, AbuseIPDB, or others. This tool handles some of the challenges and complexities of using the InsightIDR REST API, including polling queries in progress, paginated responses, handling the JSON output, and time range queries.
+InsightIDR4Py allows users to perform numerous actions within Rapid7 [InsightIDR](https://docs.rapid7.com/insightidr/). This tool handles some of the challenges and complexities of using the InsightIDR REST API, including polling queries in progress, paginated responses, handling the JSON output, and time range queries.
 
-InsightIDR4Py also offers access to some of the additional APIs in the InsightIDR ecosystem. These include:
+These capabilities can be particularly useful for automating processes, integrating log data with other APIs (like VirusTotal), managing content in the InsightIDR platform, and performing multi-tenant workflows (for instance, updating content across tenants for consistency, or copying content from one InsightIDR tenant to another). For some ideas on how InsightIDR4Py can be used, check out this [blog post](https://micahbabinski.medium.com/button-pusher-to-masterbuilder-automating-siem-workflows-3f51874a80e) where I cover some use cases.
+
+The API capabilities provided by InsightIDR4Py include:
+## Logsearch
+* Query Events
+* Query Groups
+
+## Saved Queries
+* List Saved Queries
+* Get a Saved Query
+* Create Saved Query
+* Replace a Saved Query
+* Update a Saved Query
+* Delete a Saved Query
+
+## Custom Alerts*
+* List Custom Alerts
+* Get a Custom Alert
+* Create Custom Alert
+* Replace a Custom Alert
+* Update a Custom Alert
+* Delete a Custom Alert
+
+*Only pattern detection alerts are supported currently.
+
 ## Investigations
 * List Investigations
 * Get an Investigation
@@ -15,20 +39,14 @@ InsightIDR4Py also offers access to some of the additional APIs in the InsightID
 * List Comments on an Investigation
 * Create Comment
 * Delete Comment
+
 ## Threats
 * Create Threat
 * Add Indicators to Threat
 * Replace Threat Indicators
 * Delete Threat
-## Saved Queries
-* List Saved Queries
-* Get a Saved Query
-* Create Saved Query
-* Replace a Saved Query
-* Update a Saved Query
-* Delete a Saved Query
 
-Happy analyzing!:monocle_face:
+Happy analyzing :monocle_face: and happy administering! :hammer:
 
 # Installation
 InsightIDR4Py is available on [PyPI](https://pypi.org/project/InsightIDR4Py/) and can be installed using:
