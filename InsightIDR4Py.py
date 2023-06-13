@@ -31,6 +31,7 @@ class InsightIDR(object):
         self.investigations_url = "https://{}.api.insight.rapid7.com/idr/v2/investigations/".format(self.region)
         self.comments_url = "https://{}.api.insight.rapid7.com/idr/v1/comments/".format(self.region)
         self.threat_url = "https://{}.api.insight.rapid7.com/idr/v1/customthreats/".format(self.region)
+        self.mgmt_url = "https://{}.rest.logs.insight.rapid7.com/management/".format(self.region)
 
     def _get_region(self):
         """
@@ -511,8 +512,187 @@ class InsightIDR(object):
         result = response.json()
 
         return result
-        
-        
+
+    def ListCustomAlerts(self):
+        """
+        Lists all 'Tags' aka alerts, associated with the account.
+        """
+        url = self.mgmt_url + "tags"
+        response = self.session.get(url)
+        result = response.json()
+        alerts = result["tags"]
+
+        return alerts
+
+    def GetCustomAlert(self, custom_alert_id):
+        """
+        Retrieve a single custom alert by its ID value
+        """
+        url = self.mgmt_url + "tags/{}".format(custom_alert_id)
+        response = self.session.get(url)
+        result = response.json()
+        alert = result["tag"]
+
+        return alert
+
+    def CreateCustomAlert(self, name, logsource, query, description="", actions=[], labels=[],
+                                          priority="low"):
+        """
+        Create a custom alert. If log source is set to an array of logsource IDs, these will be used. If a logset name is provided,
+        the log IDs for this log set will be retrieved and used.
+        """
+        # validate input
+        if not priority.lower() in ("low", "medium", "high", "critical"):
+            raise ValueError("Priority must be one of [low, medium, high, critical]!")
+
+        # map alert priority to numeric value
+        priority_mapping = {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+            "critical": 4
+        }
+        priority = priority_mapping[priority.lower()]
+
+        # list logsource IDs
+        if type(logsource) == list:
+            logsource_ids = [{"id": item} for item in logsource]
+        else:
+            logsource_ids = [{"id": item} for item in self.ListLogIdsByLogSetName(logsource)]
+
+        # format parameters
+        data = {
+            "tag": {
+                "name": name,
+                "sources": logsource_ids,
+                "type": "Alert",
+                "leql": {"statement": query},
+                "description": description,
+                "actions": actions,
+                "labels": labels,
+                "priority": priority
+            }
+        }
+
+        # send request
+        self.session.headers["Content-type"] = "application/json"
+        url = self.mgmt_url + "tags"
+        response = self.session.post(url, json=data)
+        result = response.json()
+
+        return result
+
+    def ReplaceCustomAlert(self, alert_id, name, logsource, query, description="", actions=[], labels=[],
+                           priority="low"):
+        """
+        Replaces a custom alert identified by the alert_id value. If log source is set to an array of logsource IDs, these will be used.
+        If a logset name is provided, the log IDs for this log set will be retrieved and used.
+        """
+        # validate input
+        if not priority.lower() in ("low", "medium", "high", "critical"):
+            raise ValueError("Priority must be one of [low, medium, high, critical]!")
+
+        # map alert priority to numeric value
+        priority_mapping = {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+            "critical": 4
+        }
+        priority = priority_mapping[priority.lower()]
+
+        # list logsource IDs
+        if type(logsource) == list:
+            logsource_ids = [{"id": item} for item in logsource]
+        else:
+            logsource_ids = [{"id": item} for item in self.ListLogIdsByLogSetName(logsource)]
+
+        # format parameters
+        data = {
+            "tag": {
+                "name": name,
+                "sources": logsource_ids,
+                "type": "Alert",
+                "leql": {"statement": query},
+                "description": description,
+                "actions": actions,
+                "labels": labels,
+                "priority": priority
+            }
+        }
+
+        # send request
+        self.session.headers["Content-type"] = "application/json"
+        url = self.mgmt_url + "tags/{}".format(alert_id)
+        response = self.session.put(url, json=data)
+        result = response.json()
+
+        return result
+
+    def UpdateCustomAlert(self, alert_id, name=None, logsource=None, query=None, description=None, actions=None, labels=None,
+                          priority=None):
+        """
+        Updates any user-specified element of a custom alert, identified by the alert_id
+        """
+        if priority:
+            # validate input
+            if not priority.lower() in ("low", "medium", "high", "critical"):
+                raise ValueError("Priority must be one of [low, medium, high, critical]!")
+
+            # map alert priority to numeric value
+            priority_mapping = {
+                "low": 1,
+                "medium": 2,
+                "high": 3,
+                "critical": 4
+            }
+            priority = priority_mapping[priority.lower()]
+
+        # list logsource IDs
+        if logsource:
+            if type(logsource) == list:
+                logsource_ids = [{"id": item} for item in logsource]
+            else:
+                logsource_ids = [{"id": item} for item in self.ListLogIdsByLogSetName(logsource)]
+        else:
+            logsource_ids = None
+
+        if query:
+            leql_obj = {"statement": query}
+        else:
+            leql_obj = None
+
+        # format parameters
+        params = {
+            "name": name,
+            "sources": logsource_ids,
+            "type": "Alert",
+            "leql": leql_obj,
+            "description": description,
+            "actions": actions,
+            "labels": labels,
+            "priority": priority
+        }
+        params = {k:v for k, v in params.items() if v}
+        data = {"tag": params}
+
+        # send request
+        self.session.headers["Content-type"] = "application/json"
+        url = self.mgmt_url + "tags/{}".format(alert_id)
+        response = self.session.patch(url, json=data)
+        result = response.json()
+
+        return result
+
+    def DeleteCustomAlert(self, alert_id):
+        """
+        Deletes the custom alert identified by the alert_id
+        """
+        url = self.mgmt_url + "tags/{}".format(alert_id)
+        response = self.session.delete(url)
+
+        return response
+                
     def ListSavedQueries(self):
         """
         Lists saved queries in the InsightIDR platform.
@@ -566,7 +746,7 @@ class InsightIDR(object):
                 }
             }
 
-        # make the reuest
+        # make the request
         url = self.query_url + "saved_queries"
         response = self.session.post(url, json=data)
         result = response.json()
